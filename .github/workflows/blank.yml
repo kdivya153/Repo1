@@ -1,6 +1,8 @@
 name: Check Pull Request
 on:
   workflow_dispatch:
+   inputs:
+      OPENRPC_PR_BRANCH: ${{ github.event.pull_request.head.ref }}
   pull_request:
     types:
       - 'ready_for_review'
@@ -21,5 +23,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: kdivya153/REPO2
           ref: master
-          inputs: 
-            OPENRPC_PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        
+            
+           
