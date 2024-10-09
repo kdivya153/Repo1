@@ -20,5 +20,6 @@ jobs:
           workflow: 'CI'  # Workflow in Repo B
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: kdivya153/REPO2
+          ref: master
           inputs: 
             OPENRPC_PR_BRANCH: ${{ github.event.pull_request.head.ref }}
