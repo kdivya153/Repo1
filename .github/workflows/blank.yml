@@ -25,10 +25,9 @@ jobs:
           version="${{ github.event.inputs.target_version }}"
 
           curl -X POST https://api.github.com/repos/$repo_owner/$repo_name/dispatches \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -u ${{ secrets.PR_KEY }} \
-           -d '{\"event_type\": \"$event_type\", \"client_payload\": {\"service\": \"$service\", \"version\": \"$version\", \"unit\": false, \"integration\": true}}'
-          
-          
+            -H 'Accept: application/vnd.github.everest-preview+json' \
+            -u "kdivya153:${{ secrets.PR_KEY }}" \
+            -d "{\"event_type\": \"$event_type\", \"client_payload\": {\"service\": \"$service\", \"version\": \"$version\", \"unit\": false, \"integration\": true}}"
+
             
            
