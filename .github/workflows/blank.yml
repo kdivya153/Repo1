@@ -1,0 +1,28 @@
+name: Check Pull Request
+on:
+  workflow_dispatch:
+   inputs:
+      OPENRPC_PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+  pull_request:
+    types:
+      - 'ready_for_review'
+      - 'opened'
+      - 'reopened'
+      - 'synchronize'
+env:
+  HUSKY: 0
+jobs:
+  trigger_repo_b_workflow:
+    name: Trigger Firebolt API Workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger MFOS Workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: 'CI'  # Workflow in Repo B
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repo: kdivya153/REPO2
+          ref: master
+        
+            
+           
