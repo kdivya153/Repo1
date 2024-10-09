@@ -22,6 +22,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: kdivya153/REPO2
           ref: master
+          inputs: 
+            '${{ github.event.pull_request.head.ref }}' 
         
             
            
