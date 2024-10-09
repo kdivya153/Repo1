@@ -19,7 +19,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: 'CI'  # Workflow in Repo B
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PR_KEY}}
           repo: kdivya153/REPO2
           ref: master
           inputs: 
