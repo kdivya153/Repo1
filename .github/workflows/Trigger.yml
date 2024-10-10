@@ -1,0 +1,19 @@
+# .github/workflows/trigger_workflow.yml in the source repository
+name: Trigger Another Repo Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger workflow in another repository
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # or use a custom token with proper permissions
+          repository: kdivya153/REPO2
+          event-type: trigger-workflow
+          client-payload: '{"OPENRPC_PR_BRANCH": "${{ github.ref }}"}'
