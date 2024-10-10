@@ -13,7 +13,7 @@ jobs:
       - name: Trigger workflow in another repository
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # or use a custom token with proper permissions
+          token: ${{ secrets.PR_KEY }}  # or use a custom token with proper permissions
           repository: kdivya153/REPO2
           event-type: trigger-workflow
           client-payload: '{"OPENRPC_PR_BRANCH": "${{ github.ref }}"}'
