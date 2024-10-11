@@ -17,3 +17,7 @@ jobs:
           repository: kdivya153/REPO2
           event-type: trigger-workflow
           client-payload: '{"OPENRPC_PR_BRANCH": "${{ github.ref }}"}'
+
+      - name: Store the workflow run ID
+        run: |
+          echo "Waiting for Repo2 to finish execution"
