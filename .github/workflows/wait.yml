@@ -1,0 +1,22 @@
+# Repo1: .github/workflows/wait_for_repo2.yml
+name: Wait for Repo2 Workflow Completion
+
+on:
+  workflow_run:
+    workflows: ["Triggered Workflow"]  # Name of the workflow in Repo2
+    types:
+      - completed
+
+jobs:
+  check-repo2-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if Repo2 workflow succeeded
+        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+        run: |
+          echo "Repo2 workflow failed. Failing Repo1 workflow."
+          exit 1  # Fail the workflow if Repo2 failed
+
+      - name: Proceed if Repo2 succeeded
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        run: echo "Repo2 workflow succeeded. Continuing in Repo1."
