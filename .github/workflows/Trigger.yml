@@ -21,3 +21,46 @@ jobs:
       - name: Store the workflow run ID
         run: |
           echo "Waiting for Repo2 to finish execution"
+
+  wait-for-repo2:
+    needs: trigger-workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Poll Repo2 Workflow Status
+        id: poll-repo2
+        run: |
+          TOKEN="${{ secrets.PR_KEY }}"
+          REPO_OWNER="kdivya153"
+          REPO_NAME="REPO2"
+          WORKFLOW_NAME="Triggered Workflow"
+
+          # Poll for the latest workflow run in Repo2
+          while true; do
+            response=$(curl -s -H "Authorization: token $TOKEN" \
+              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/workflows" | jq \
+              --arg WORKFLOW_NAME "$WORKFLOW_NAME" \
+              '.workflows[] | select(.name == $WORKFLOW_NAME)')
+              
+            workflow_id=$(echo $response | jq -r '.id')
+            if [ "$workflow_id" == "null" ]; then
+              echo "Workflow not found, retrying..."
+              sleep 10
+              continue
+            fi
+
+            # Get the latest workflow run
+            run_response=$(curl -s -H "Authorization: token $TOKEN" \
+              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/workflows/$workflow_id/runs?status=completed&per_page=1")
+            
+            conclusion=$(echo $run_response | jq -r '.workflow_runs[0].conclusion')
+            if [ "$conclusion" == "success" ]; then
+              echo "Repo2 workflow completed successfully."
+              break
+            elif [ "$conclusion" == "failure" ]; then
+              echo "Repo2 workflow failed. Failing Repo1."
+              exit 1
+            else
+              echo "Repo2 workflow still in progress. Checking again in 10 seconds..."
+              sleep 10
+            fi
+          done
