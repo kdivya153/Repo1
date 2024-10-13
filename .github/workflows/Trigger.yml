@@ -1,38 +1,51 @@
-# .github/workflows/trigger_workflow.yml in the source repository
-name: Trigger Another Repo Workflow
-
+name: Check Pull Request
 on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - 'opened'
+      - 'synchronize'
   push:
     branches:
-      - main
-
+      - next
+env:
+  HUSKY: 0
 jobs:
-  trigger-workflow:
+  release:
+    name: Run npm pack
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger workflow in another repository
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 'lts/*'
+
+      - name: Trigger Firebolt API repo workflow
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.PR_KEY }}  # or use a custom token with proper permissions
           repository: kdivya153/REPO2
           event-type: trigger-workflow
-          client-payload: '{"OPENRPC_PR_BRANCH": "${{ github.ref }}"}'
+          client-payload: '{"OPENRPC_PR_BRANCH": "${{ github.event.pull_request.head.ref }}"}'
 
       - name: Store the workflow run ID
         run: |
           echo "Waiting for Repo2 to finish execution"
-
   wait-for-repo2:
-    needs: trigger-workflow
+    needs: release
     runs-on: ubuntu-latest
     steps:
-      - name: Poll Repo2 Workflow Status
-        id: poll-repo2
+      - name: Poll Firebolt-api Workflow Status
+        id: poll-firebolt-api
         run: |
           TOKEN="${{ secrets.PR_KEY }}"
           REPO_OWNER="kdivya153"
           REPO_NAME="REPO2"
-          WORKFLOW_NAME="Triggered Workflow"
+          WORKFLOW_NAME="MFOS standalone sanity report - CORE,MANAGE,DISCOVERY"
 
           # Poll for the latest workflow run in Repo2
           while true; do
@@ -54,13 +67,38 @@ jobs:
             
             conclusion=$(echo $run_response | jq -r '.workflow_runs[0].conclusion')
             if [ "$conclusion" == "success" ]; then
-              echo "Repo2 workflow completed successfully."
+              echo "SDK generated successfully."
               break
             elif [ "$conclusion" == "failure" ]; then
-              echo "Repo2 workflow failed. Failing Repo1."
+              echo "Failing to generate SDK with the following OPENRPC changes"
               exit 1
             else
-              echo "Repo2 workflow still in progress. Checking again in 10 seconds..."
-              sleep 10
+              echo " still in progress. Checking again in 120 seconds..."
+              sleep 120
             fi
           done
+
+  # notify-slack-on-failure:
+  #   needs: wait-for-repo2
+  #   if: failure()
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Send Slack notification
+  #       env:
+  #         EVENT_NAME: ${{ github.event_name }}
+  #       run: |
+  #         # Determine the branch name based on the event type
+  #         if [ "$EVENT_NAME" == "repository_dispatch" ]; then
+  #           BRANCH_NAME=$OPENRPC_PR_BRANCH
+  #         elif [ "$EVENT_NAME" == "pull_request" ]; then
+  #           BRANCH_NAME=${{ github.event.pull_request.head.ref }}
+  #         elif [ "$EVENT_NAME" == "push" ]; then
+  #           BRANCH_NAME=${GITHUB_REF#refs/heads/}  # Extract branch name from GITHUB_REF for push events
+  #         else
+  #           BRANCH_NAME="unknown"
+  #         fi
+
+  #         # Send the Slack notification with the branch name
+  #         curl -X POST -H 'Content-type: application/json' \
+  #         --data '{"text": "Failed to generate SDK artifact with the latest changes in the Branch: '$BRANCH_NAME'."}' \
+  #         ${{ secrets.SLACK_WEBHOOK_URL }}
